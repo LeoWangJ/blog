@@ -13,7 +13,7 @@ cd ./dist
 git init
 git add -A
 git commit -m 'deploy'
-git push -f git@github.com:leowangJ/blog.git master:gh-pages
+git push -f git@github.com:LeoWangJ/blog.git master:gh-pages
 
 # 把下面的push命令按照你的情况修改后去掉注释
 # 如果发布到 https://<USERNAME>.github.io
