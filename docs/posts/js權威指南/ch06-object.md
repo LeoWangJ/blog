@@ -32,8 +32,8 @@ javascript物件是動態的，意思是你可以對一個物件直接新增屬�
  ```
  透過構造函數(constructor)來初始化一個物件，此種方式與物件直接量其實是一樣的。  
  ### Object.create()
-此方法擁有兩個參數，第一個是要指定這個物件的原型，第二個可選參數是對這個物件的屬性進行近一步描述。  
-註: 用Object.create出來的物件是不會有Object本身的原型(與上述兩種方式不同)。  
+此方法擁有兩個參數，第一個是這個物件的原型，第二個可選參數是對這個物件的屬性進行近一步描述。  
+註: 用Object.create創建出來的物件是不會有Object本身的原型即Object.prototype(與上述兩種方式不同)。  
 ```js
  let obj = Object.create({x:1,y:1}) // obj繼承了屬性x和y
  let obj2 = Object.create(null) //obj2不繼承任何屬性和方法
@@ -125,7 +125,60 @@ var obj = Object.create({x:1,y:2},{
   console.log(Object.getOwnPropertyNames(obj)) // return [p,o]
 ```
 
-## 物件的三個屬性
-原型(prototype)
-類(class): 是一個字串，用來表示物件的類型訊息
-可擴展性(extensible attribute): 表示可以給物件添加新屬性
+## 4. 修改屬性特性
+上面有提到三種屬性的特性，在創建物件時可以使用Object.create方式去新增屬性特性，那要編輯已存在的物件時該怎麼辦呢？  
+必須使用Object.defineProperty方法去編輯已存在物件的屬性，這個方法對寫library或者框架的使用者來說是很重要的，
+因為可以透過這個API對原型物件添加方法，並將它改成不可枚舉，讓他們看起來更像內置方法。
+```js
+let obj = {x:3}
+Object.defineProperty(obj,'x',{ // 修改已存在屬性的特性
+  value: 2,
+  writable: false,
+  enumerable: true
+})
+console.log(obj.x) // 2
+
+Object.defineProperty(obj,'y',{ // 也可以對存在的物件新增屬性
+  value: 2,
+  writable: false,
+  enumerable: true
+})
+console.log(obj) // x:2 y:2
+```
+## 5. 序列化物件(serialzation)
+指的是可以將物件轉成字串，以及將字串還原成物件  
+JSON.stringify() : 將物件轉為字串。  
+JSON.parse() : 將字串還原成物件。  
+可以使用此種方法進行深拷貝，但無法拷貝不可枚舉的屬性
+```js
+
+let o = Object.create({x:1,y:2},{
+  p:{
+    value:2,
+    enumerable: false
+  },
+  o:{
+    value:3,
+    enumerable: true
+  }
+})
+
+let o2 = Object.create(o,{
+  r:{
+    value:2,
+    enumerable: false
+  },
+  k:{
+    value:3,
+    enumerable: true
+  }
+})
+
+let newO2 = JSON.parse(JSON.stringify(o2)) // 先轉為字串，再轉為物件
+console.log(newO2) // {k:3}
+console.log(Object.getPrototypeOf(newO2)) //取得原型的方法,原型又變成了Object.prototype
+```
+## 後續
+關於物件還有幾種內建的方法(toString,toJSON...)就不一一介紹了，有興趣的讀者可以自行研究。  
+看完這個章節後，發現很多API以前都不曉得，對於物件的掌握也比想像中的還低！  
+只能說javascript這門語言太多地方需要琢磨了～
