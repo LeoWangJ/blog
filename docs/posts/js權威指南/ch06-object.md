@@ -3,7 +3,7 @@ title: 『JS權威指南』- 物件object
 tags: [javascript, JS權威指南]
 ---
 ## 前言
-物件是javascript的基本數據類型，可以通過三種方法來創建物件(物件直接量、透過new、Object.create())。  
+物件是javascript的引用數據類型，可以通過三種方法來創建物件(物件直接量、透過new、Object.create())。  
 物件可以從一個原型物件繼承屬性，這種『原型式繼承』是javascript的核心特徵。  
 javascript物件是動態的，意思是你可以對一個物件直接新增屬性，也可以刪除屬性(屬性指的就是物件內的key:value)。  
 物件的屬性中有三種特性，而物件本身也有三種特性，下面我們會深入介紹  
