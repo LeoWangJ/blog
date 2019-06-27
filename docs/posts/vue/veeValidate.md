@@ -50,7 +50,7 @@ const someRuleObj = {
   included: [1,2,3] //物件中單個參數時可以使用字串，多個參數時必須使用陣列來包覆參數
 }
 ```
-當使用字串驗證時必須使用單引號('')來包覆字串，因為Vue會將v-validate中未包覆成單引號的字串當成methods或者prop而導致錯誤  
+當使用字串驗證時必須使用單引號(' ')來包覆字串，因為Vue會將v-validate中未包覆成單引號的字串當成methods或者prop而導致錯誤  
 
 ```js
 <input v-validate="required" type="password" name="password" > // 錯誤
@@ -58,3 +58,75 @@ const someRuleObj = {
 ```
 
 ## 錯誤顯示
+所有取得錯誤的方法都會存在errors這個物件實例裡,以下我們來介紹顯示錯誤的幾種方法。
+
+1. 同個欄位下顯示單個錯誤
+2. 同個欄位下顯示多個錯誤
+3. 顯示全部欄位的錯誤
+
+### 同個欄位下顯示單個錯誤
+
+這是官方預設的顯示錯誤方式,是採用fast-exit策略,意思是當有偵測到第一個錯誤資訊時,他的錯誤訊息將會被生成並儲存在errors實例中,而其他錯誤資訊就會被忽略掉  
+
+使用errors.first('欄位名稱')方法來顯示該欄位的錯誤
+
+```js
+<input type="text" name="fieldName" v-validate="'required'">
+<span>{{ errors.first('fieldName') }}</span>
+```
+
+### 同個欄位下顯示多個錯誤
+
+預設是只能顯示第一個錯誤資訊,但是官方有提供continues方法能夠讓你顯示多個錯誤訊息,用法可以查看下面usage  
+假如你該欄位的錯誤訊息不止一個時,可以使用errors.collect('欄位名稱')方法來顯示所有錯誤
+
+
+```js
+<input type="text" name="fieldName" v-validate.continues="'required|alpha|min:5'">
+<ul>
+  <li v-for="error in errors.collect('fieldName')">{{ error }}</li>
+</ul>
+```
+
+### 顯示全部欄位的錯誤
+
+若要顯示全部欄位的錯誤時,可以使用errors.all()方法來呈現
+
+```js
+<input type="text" name="first" v-validate.continues="'required|alpha|min:5'">
+
+<input type="text" name="second" v-validate.continues="'required|alpha|min:5'">
+
+<ul>
+  <li v-for="error in errors.all()">{{ error }}</li>
+</ul>
+```
+
+另一種方式是使用errors.collect(),但要注意的是他的格式是欄位名稱為key,錯誤訊息為value且是array格式
+
+```js
+格式
+{
+  username: ['不能為空'],
+  password: ['不能為空']
+}
+
+使用方式
+<input type="text" name="first" v-validate.continues="'required|alpha|min:5'">
+
+<input type="text" name="second" v-validate.continues="'required|alpha|min:5'">
+
+<ul>
+  <li v-for="group in errors.collect()">
+    <ul>
+      <li v-for="error in group">{{ error }}</li>
+    </ul>
+  </li>
+</ul>
+```
+
+## 驗證規則
+
+## 客製化錯誤訊息
+如果不喜歡vee-validate 預設的錯誤訊息,官方有提供修改的方式
+
