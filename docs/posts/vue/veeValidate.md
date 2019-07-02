@@ -126,7 +126,65 @@ const someRuleObj = {
 ```
 
 ## 驗證規則
+官方有提供一些驗證規則讓我們可以使用,以下就來介紹各項驗證用法
+
+- after 合法日期(可用date_format來定義日期格式)必須大於target參數欄位  
+  params:  
+  target: 用來判斷的日期  
+  inclusion: 當日期與target日期相同時,是否符合規則,預設為false(不符合)  
+
+- before 合法日期(可用date_format來定義日期格式)必須小於target參數欄位  
+  params與after相同
+
+- alpha 僅能輸入英文字
+- alpha_dash 能輸入英文字、數字、下劃線(_)與破折號(-)
+- alpha_num 僅能輸入英文字與數字
+- alpha_spaces 僅能輸入英文字與空白
+- between 數字介於min與max之間  
+  params:  
+  min: 最小值  
+  max: 最大值  
+```html
+  <input v-validate="'between:1,11'" name="between_field" type="text">
+```
+- confirmed 判斷兩個欄位之間的值是否相等,必須有ref屬性欄位供comfirmed判斷參考依據的欄位    
+```html
+  <input v-validate="'required'" name="password" type="text" ref="password">
+  <input v-validate="'required|confirmed:password'" name="between_field" type="text">
+```
+- credit_card 驗證信用卡號
+- date_between 驗證所填日期是否介於min與max日期之間  
+  params:  
+  min: 最小日期  
+  max: 最大日期  
+  inclusion  是否包含min與max的日期;預設為false  
+```html
+  <input v-validate="'date_format:dd/MM/yyyy|date_between:10/09/2016,20/09/2016'" name="date_between_field" type="text">
+```
+- date_format 日期格式,在使用任何的日期規則時,必須傳入
+```html
+<input v-validate="'date_format:dd/MM/yyyy'" name="date_format_field" type="text">
+```
 
 ## 客製化錯誤訊息
 如果不喜歡vee-validate 預設的錯誤訊息,官方有提供修改的方式
 
+## localization
+由於我們的用戶不一定是英文語系國家的人,所以我們需要依照地區來顯示相對應語系的錯誤訊息  
+我會介紹如何載入語系以及客製化錯誤訊息
+
+```js
+import zh_CN from 'vee-validate/dist/locale/zh_CN'
+
+const custom_CN = {
+  password: {
+    required: '密码 不能为空'
+  },
+  username: {
+    required: () => '用户名 不能为空',
+    min: '123'
+  }
+}
+
+VeeValidate.Validator.localize('zh_CN', { ...zh_CN, custom: custom_CN })
+```
