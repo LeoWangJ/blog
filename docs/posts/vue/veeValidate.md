@@ -188,3 +188,45 @@ const custom_CN = {
 
 VeeValidate.Validator.localize('zh_CN', { ...zh_CN, custom: custom_CN })
 ```
+
+## 驗證事件
+驗證錯誤的觸發判斷的預設值是監聽input事件的,若想選擇其他的監聽事件,例如change事件等,可以在使用veeValidate時傳入events key來判斷。  
+可以監聽多個事件判斷,也可以客製化自己的事件
+```js
+Vue.use(VeeValidate, {
+  events: 'change|blur|custom'
+});
+```
+
+當然你也可以指定某個特定的輸入框,使用data-vv-validate-on  
+```js
+<input name="field" v-validate="'required'" data-vv-validate-on="change|custom">
+```
+
+若你想要點擊送出按鈕時才觸發驗證,可以將evnets的值填空字串,這樣就不會觸發input的任何監聽事件
+```js
+Vue.use(VeeValidate, {
+  events: ''
+});
+```
+
+也可以對單一個輸入框進行判斷,在v-validate後添加disable
+```html
+<input name="field" v-validate.disable="'required'">
+```
+
+若想在發送表單中的函式做驗證判斷
+```js
+export default {
+  // ...
+  methods: {
+    onSubmit () {
+      this.$validator.validate().then(valid => {
+        if (!valid) {
+          // do stuff if not valid.
+        }
+      });
+    }
+  }
+  // ...
+}
