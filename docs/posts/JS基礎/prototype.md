@@ -41,7 +41,86 @@ console.log(car2.name,car2.tax()) // BMW 1560000
 根據上面的例子，構造函數生成出來的物件實例各有自己的屬性與方法，無法共享。這有好處也有壞處，好處是修改屬性時不會全部實例跟著改變;而壞處就是共用的方法或屬性在每次創建實例時都會被創造出來，造成記憶體的消耗。為了解決這個問題，作者在函數中設置了一個prototype屬性。
 
 ## 原型(prototype)是什麼?
+原型讓我們不需要再重複創建一個屬性或者方法，它可以讓我們將共用的方法放到一個物件中。
+prototype是函式中會自行創建的一種物件。當創建一個實例時，會自動將原型綁定到該實例上。
 
+```js
+let Car = function(name,color,amount){
+    this.name = name
+    this.color = color
+    this.amount = amount
+}
+
+Car.prototype.tax = function(countryTax){
+    return this.amount * countryTax
+}
+let car1 = new Car('toyota', 'yellow','700000')
+console.log(car1.name,car1.tax('1.2')) // toyota 840000
+let car2 = new Car('BMW', 'black','1200000')
+console.log(car2.name,car2.tax('1.3')) // BMW 1560000
+console.log(car1.tax === car2.tax) // true, 這表示了來自同一個函式
+```
+
+那麼到底car1.tax是怎麼知道要從哪邊去找tax這個方法呢? 將car1打印出來後會發現有一個方法__proto__, 查看後有tax這個方法，看起來就是透過這個方法去繼承的。
+
+## prototype與__proto__ 關聯性
+這個__proto__(應該用Object.getPrototypeOf會更嚴謹，但為了方便我們使用__proto__來描述)也是JS自動生成的，他只會存在物件當中，是用來獲取創造實例的構造函數的原型，也是實現原型鏈的原理。
+
+```js
+let Person = function(){}
+Person.prototype.hello = function() {
+    console.log('hello')
+}
+let leo = new Person()
+
+leo.hello() // 通過__proto__原型鏈使用Person.prototype的方法
+leo.hasOwnProperty() // 通過__proto__原型鏈使用Object.prototype的方法
+
+leo.__proto__ === Person.prototype // true
+Person.__proto__ === Function.prototype // true
+
+```
+
+值得注意的是Person.\_\_proto\_\_ 繼承的是Function.prototype。函式也是物件的一種，在函式中同時擁有__proto__與prototype。
+
+那麼什麼時候__proto__指向構造函數的prototype呢? 這就與new有關聯。
+
+## new操作符實際做了什麼事?
+在上面的那些例子中，我們知道new 一個構造函數後所產生的實例是物件並且原型指向構造函數的prototype。除了這些new還做了什麼?
+
+其實new一共幫我們做了四件事情:
+1. 新增一個物件
+2. 將構造函數的prototype指向物件的__proto__
+3. 呼叫構造函數並且使用新增的物件當作this傳入
+4. 若呼叫的構造函數有返回物件則返回(若是一般屬性則不返回)，若無則返回新增的物件
+
+```js
+// con - 構造函數
+// arg - 參數
+function fakeNew(con,...arg){
+    let obj = {}
+    Object.setPrototypeOf(obj,con.prototype) // obj.__proto__ = con.prototype
+    let result = con.call(obj,...arg)
+    return typeof result === 'object' ? result : obj
+}
+
+let Person = function(name,age){
+    this.name = name
+    this.age = age
+}
+
+Person.prototype.hello = function() {
+    console.log(`hello, ${this.name} , age = ${this.age}`)
+}
+
+let leo = fakeNew(Person,'leo',18)
+leo.hello() // hello, leo , age = 18
+```
+
+## 如何查找原型方法及屬性
+- instanceof
+- hasOwnProperty
+- in
 
 ## 參考
 - [該來理解 JavaScript 的原型鍊了](https://blog.techbridge.cc/2017/04/22/javascript-prototype/)
