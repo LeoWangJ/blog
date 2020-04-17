@@ -117,10 +117,79 @@ let leo = fakeNew(Person,'leo',18)
 leo.hello() // hello, leo , age = 18
 ```
 
-## 如何查找原型方法及屬性
+## 如何查找原型繼承及方法屬性
 - instanceof
+- isPrototypeOf
+- constructor判斷
 - hasOwnProperty
 - in
+
+### instanceof 
+這個方法是用來判斷實例是否繼承某個構造函數
+
+> 實例 instanceof 構造函數
+
+```js
+let Person = function(name,age){
+    this.name = name
+    this.age = age
+}
+
+Person.prototype.hello = function() {
+    console.log(`hello, ${this.name} , age = ${this.age}`)
+}
+
+let leo = new Person('leo','18')
+console.log(leo instanceof Person) //true
+console.log(leo instanceof Object) //true
+```
+根據上面例子，我們可以知道構造函數只要是有在原型鏈上就會為true，並不是判斷生成該實例的構造函數。
+這個方法其實很好自我實現
+
+```js
+/**
+* instance - 實例 
+* con - 構造函數
+*/
+let polyfillInstanceof = function(instance,con){
+ if(!instance) return false
+
+ return instance.__proto__ === con.prototype ? true : polyfillInstanceof(instance.__proto__, con)
+}
+```
+
+### isPrototypeOf
+這個方法基本上完全與instanceof相同，只是參數位置不同
+> 實例.isPrototypeOf(構造函數)
+
+```js
+leo.isPrototypeOf(Person) // true
+leo.isPrototypeOf(Array) // false
+```
+
+### constructor
+若想要知道實例真正繼承哪個構造函數時，我們可以用constructor方法來判斷
+
+```js
+leo.__proto__.constructor === Person // true
+leo.__proto__.constructor === Object //false 
+```
+
+### hasOwnProperty
+這個方法能判斷是否擁有該屬性或者方法，這使我們能夠判斷該方法與屬性是來自哪裡
+
+```js
+leo.hasOwnProperty('name') //true
+leo.hasOwnProperty('name') //true
+leo.__proto__.hasOwnProperty('hello') //true
+```
+
+### in
+in與hasOwnProperty一樣都是用來查找方法與屬性，差別在與只要方法與屬性有存在實例或原型鏈上，就會返回true
+```js
+'name' in leo // true
+'hello' in leo // true
+```
 
 ## 參考
 - [該來理解 JavaScript 的原型鍊了](https://blog.techbridge.cc/2017/04/22/javascript-prototype/)
