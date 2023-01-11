@@ -5,7 +5,7 @@ tags: [javascript, JS基礎]
 
 ## 前言
 
-在執行上下文的詞法環境中，我們談到 `this binding`，所以我們能夠知道 `this` 的值是在調用函數時才確認，而非創建函數時。  
+在執行上下文的詞法環境中，我們談到在創建詞法階段時會綁定 `this` 值，所以我們能夠知道 `this` 的值是在調用函數時才確認，而非創建函數時。  
 而該篇我們來談論 `this` 值是如何確定的。
 
 ## this 是什麼?
@@ -14,28 +14,131 @@ tags: [javascript, JS基礎]
 
 
 ## this 的綁定規則
+先說自己總結的結論為，`this` 值是指向 "最後" 調用該函數的物件。  
 
 - 默認綁定
-  在全局與函數下使用 `this`，`this` 的默認值是指向 `window`。
+
+  在全局與函數下使用 `this`，默認值是指向 `window`。
   ```js
   console.log(this)
   function hello(){
     console.log(this) // this
   }
-  hello()
+  hello() // 可以看作 window.hello()
   ``` 
-  不過當開啟嚴格模式(`'use strict'`)時， `this` 值將會為 `undefined`。  
+  不過當開啟嚴格模式(`use strict`)時， 函數中的 `this` 值將會為 `undefined`。  
 
    ```js
   function hello(){
+    'use strict'
     console.log(this) // undefined
   }
   hello()
   ``` 
+  多層嵌套的函數中，由於 `c` 函數並未有物件調用，所以默認指向 `window`。  
+  ```js
+  var msg = 'global' // 如果使用 let, const 來定義變數，變數並不會添加到 window 上
+  function a(){
+    function b(){
+      var msg = 'bMsg'
+      function c(){
+        console.log(this.msg) // global
+      }
+      c()
+    }
+    b()
+  }
+  a()
+  ```
 - 隱式綁定
+
+  透過物件調用的函數，則屬於隱式綁定的一種。  
+  ```js
+  var msg = 'global'
+  function fn(){
+    console.log(this.msg)
+  }
+  let obj = {
+    msg:'objMsg',
+    func:fn
+  }
+  
+  fn() // global
+  obj.func() // objMsg
+  ```
+
+  不過需要注意可能會有 `this` 丟失物件的問題。  
+  下方例子，`newFn` 賦值 `obj.func`，初學者可能會認為 `this` 值應該為 `obj`，可是實際調用後會發現 `this` 值變為 `window`。  
+  按照我們最一開始的結論來看，實際上是 `window` 調用 `newFn` 函數。   
+  ```js
+  var msg = 'global'
+  function fn(){
+    console.log(this.msg)
+  }
+  let obj = {
+    msg:'objMsg',
+    func:fn
+  }
+
+  var newFn = obj.func
+
+  fn() // global
+  obj.func() // objMsg
+  newFn() // global
+  ```
 - 顯式綁定
+ 我們可以透過 `call`、`apply`、`bind` 來綁定函數內的 `this` 值。  
+ 簡單說明一下 `call`、`apply`、`bind` 區別
+ - call - 可以改變函數內 `this` 值，第一個參數為要改變 `this` 值的物件，剩餘參數則用逗號隔開，為綁定的函數參數。  
+ - apply - 與 `call` 相同，只有傳入函數參數的格式不同，為陣列。  
+ - bind - 僅綁定 `this` 值而不會執行該函數。  
+
+
+ ```js
+ var obj1 = {
+  msg:'obj1Msg'
+ }
+
+ var obj2 = {
+  msg:'obj2Msg'
+ }
+ 
+ var msg = 'globalMsg'
+
+ function fn(){
+  console.log(this.msg)
+ }
+ 
+ fn() // globalMsg
+ fn.call(obj1)  //obj1Msg
+ fn.apply(obj2) //obj2Msg
+ var newFn = fn.bind(obj1)
+ newFn() //obj2Msg
+
+ ```
+
+ 有一些內置函數的餐數其實也提供綁定 `this` 值。  
+ ex: `forEach`
+ ```js
+ let obj = {
+  extraNumber:10
+ }
+ 
+ const newData = [1,2,3].map(function(number){
+   return number + this.extraNumber
+ },obj)
+
+ console.log(newData) // [11,12,13]
+ ```
+
 - new 綁定
+使用 `new` 呼叫構造函數時，`new` 內部會將 `this` 賦值為在 `new` 函數中創建的新物件。  
+我們了解 `new` 主要做了哪些事情，就很容易明白 `this` 值怎麼被賦值了。  
+
+
 - 箭頭函數
+
+
 
 ## this 的優先級
 
