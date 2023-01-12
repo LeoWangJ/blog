@@ -87,6 +87,7 @@ tags: [javascript, JS基礎]
   newFn() // global
   ```
 - 顯式綁定
+
  我們可以透過 `call`、`apply`、`bind` 來綁定函數內的 `this` 值。  
  簡單說明一下 `call`、`apply`、`bind` 區別
  - call - 可以改變函數內 `this` 值，第一個參數為要改變 `this` 值的物件，剩餘參數則用逗號隔開，為綁定的函數參數。  
@@ -132,14 +133,144 @@ tags: [javascript, JS基礎]
  ```
 
 - new 綁定
-使用 `new` 呼叫構造函數時，`new` 內部會將 `this` 賦值為在 `new` 函數中創建的新物件。  
-我們了解 `new` 主要做了哪些事情，就很容易明白 `this` 值怎麼被賦值了。  
 
+使用 `new` 呼叫構造函數時，`new` 內部會將 `new` 中創建的新物件賦值給 `this`。  
+其實我們了解 `new` 主要做了哪些事情，就很容易明白 `this` 值怎麼被賦值了。  
+主要有四個步驟：  
+ 1. 創建新的物件。  
+ 2. 讓新物件連結構造函數的原型鏈，使新物件能夠訪問構造函數的原型鏈。  
+ 3. 呼叫構造函數並將新物件當作 `this` 傳入給構造函數。  
+ 4. 若構造函數本身有返回物件則返回，若無則將新的物件返回。  
+
+ ```js
+ function fakeNew(con,...args){
+    let obj = {}
+    Object.setPrototypeOf(obj,con.prototype) // obj.__proto__ = con.prototype
+    let result = con.call(obj,...args)
+    return typeof result === 'object' ? result : obj
+ }
+
+ let Person = function(name,age){
+  this.name = name
+  this.age = age
+ }
+
+ Person.prototype.hello = function(){
+  console.log(`hello, ${this.name}, your age: ${this.age}`)
+ }
+
+ let leo = fakeNew(Person,'leo',27)
+ leo.hello()
+ ```
 
 - 箭頭函數
+箭頭函數中是不存在 `this` 的，所以在函數中用 `this` ，其實是指向父層的 `this`。  
 
+```js
+var msg = 'globalMsg'
+
+var fn1 = () =>{
+  console.log(this.msg)
+}
+
+function fn2(){
+  console.log(this.msg)
+}
+
+let obj ={
+  msg:'objMsg',
+  fn1: fn1,
+  fn2: fn2,
+  fn3: () => {
+    console.log(this.msg)
+  },
+  fn4: function() {
+    var callback = () =>{
+      console.log(this.msg)
+    }
+    callback()
+  }
+}
+obj.fn1() // globalMsg
+obj.fn2() // objMsg
+obj.fn3() // globalMsg
+obj.fn4() // objMsg
+
+```
+
+順帶一提，使用箭頭函數時無法當做構造函數。  
+根據我們上面分析的 `new` 原理，其中有一條是鏈結構造函數原型鏈以及呼叫構造函數並將新物件當作 `this` 傳入。  
+但是在箭頭函數中是沒有 `this` 以及原型鏈的，所以無法使用 `new`，也就無法當做構造函數。    
 
 
 ## this 的優先級
+有時候可能會應用到多條規則，那麼必須清楚知道其先後順序。  
+先說結論， `new` > `顯示綁定` > `隱式綁定` > `默認綁定`， 接著我們分析是為什麼？  
 
-`new` -> `顯示綁定` -> `隱式綁定` -> `默認綁定`
+1. 默認綁定與隱式綁定很容易理解，`this` 終究指向最後調用該函數的物件。
+
+```js
+var msg = 'globalMsg'
+
+function fn(){
+  console.log(this.msg)
+}
+
+let obj = {
+  msg:'objMsg',
+  fn:fn
+}
+
+obj.fn() // objMsg 
+```
+
+2. 隱式綁定與顯式綁定
+
+```js
+
+function fn(){
+  console.log(this.msg)
+}
+
+
+let obj = {
+  msg:'objMsg',
+  fn:fn
+}
+
+
+let obj2 = {
+  msg:'obj2Msg',
+  fn:fn
+}
+
+obj.fn() // objMsg
+obj.fn.call(obj2) // obj2Msg
+```
+
+我們會發現用顯式綁定的話，原本隱式綁定的 `msg=objMsg` 變成輸出了 `msg=obj2Msg`，證明了顯式綁定比隱式綁定優先級還高。
+
+3. `new` 與顯式綁定 
+
+```js
+function fn(){
+  console.log(this.msg)
+}
+
+
+let obj = {
+  msg:'objMsg',
+  fn:fn
+}
+
+let bindFn = fn.bind(obj)
+bindFn() // 'objMsg'
+let newFn = new bindFn() // undefined
+```
+
+先用 `bind` 做顯式綁定，在用 `new` 將顯示綁定的函數當作構造函數，會發現我們之前顯示綁定的值被替代掉了，變成 `undefined`。  
+
+## 參考
+- [你小子,又在偷偷学this指向](https://juejin.cn/post/7162747517350707213)
+- [ES6 系列之箭头函数](https://github.com/mqyqingfeng/Blog/issues/85)
+- 你不知道的JS
